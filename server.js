@@ -1,19 +1,23 @@
 const express = require('express');
 const WebSocket = require('ws');
 const app = express();
+
 const server = require('http').createServer(app);
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
+
+// Use a different variable for another server
+const anotherServer = require('http').createServer(anotherApp);
+anotherServer.listen(4000, () => {
+  console.log("Another server running on port 4000");
+});
+
 const wss = new WebSocket.Server({ server });
 
 const clients = new Map();  // Зберігає списки WebSocket-з'єднань за userId
 
-const server = app.listen(port, () => {
-  console.log(`Сервер прослушивает порт ${port}`);
-});
 
-// Закрытие сервера
-server.close(() => {
-  console.log('Сервер закрыт');
-});
 
 app.use(express.json());
 
