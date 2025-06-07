@@ -3,25 +3,13 @@ const WebSocket = require('ws');
 const app = express();
 
 const server = require('http').createServer(app);
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
-});
-
-// Use a different variable for another server
-const anotherServer = require('http').createServer(anotherApp);
-anotherServer.listen(4000, () => {
-  console.log("Another server running on port 4000");
-});
-
 const wss = new WebSocket.Server({ server });
 
-const clients = new Map();  // Зберігає списки WebSocket-з'єднань за userId
-
-
+const clients = new Map();
 
 app.use(express.json());
 
-// Обробка HTTP-запиту від сайту
+// Обработка HTTP-запросов
 app.post('/send', (req, res) => {
     const { userId, text } = req.body;
     const userClients = clients.get(userId);
@@ -31,13 +19,13 @@ app.post('/send', (req, res) => {
                 client.send(text);
             }
         });
-        res.status(200).send('Текст відправлено на всі пристрої користувача');
+        res.status(200).send('Текст отправлен на все устройства пользователя');
     } else {
-        res.status(404).send('Жоден пристрій не підключений для цього користувача');
+        res.status(404).send('Ни одно устройство не подключено для этого пользователя');
     }
 });
 
-// Обробка WebSocket-з'єднань від додатків
+// Обработка WebSocket-соединений
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const { userId } = JSON.parse(message);
@@ -45,7 +33,7 @@ wss.on('connection', (ws) => {
             clients.set(userId, []);
         }
         clients.get(userId).push(ws);
-        console.log(`Пристрій підключено для користувача ${userId}`);
+        console.log(`Устройство подключено для пользователя ${userId}`);
     });
 
     ws.on('close', () => {
@@ -56,11 +44,11 @@ wss.on('connection', (ws) => {
                 if (userClients.length === 0) {
                     clients.delete(userId);
                 }
-                console.log(`Пристрій відключено для користувача ${userId}`);
+                console.log(`Устройство отключено для пользователя ${userId}`);
                 break;
             }
         }
     });
 });
 
-server.listen(3000, () => console.log('Сервер запущено на порту 3000'));
+server.listen(3000, () => console.log('Сервер запущен на порту 3000'));
