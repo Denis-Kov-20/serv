@@ -6,8 +6,14 @@ const wss = new WebSocket.Server({ server });
 
 const clients = new Map();  // Зберігає списки WebSocket-з'єднань за userId
 
-const port = process.env.PORT || 3000;
-server.listen(port, () => console.log(`Сервер запущено на порту ${port}`));
+const server = app.listen(port, () => {
+  console.log(`Сервер прослушивает порт ${port}`);
+});
+
+// Закрытие сервера
+server.close(() => {
+  console.log('Сервер закрыт');
+});
 
 app.use(express.json());
 
