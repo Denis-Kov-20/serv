@@ -1,16 +1,25 @@
 const express = require('express');
 const WebSocket = require('ws');
-const app = express();
+const cors = require('cors');
 
+const app = express();
 const server = require('http').createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const clients = new Map();
 
+// Настройка CORS для конкретного источника
+app.use(cors({
+    origin: 'https://mapn:8890', // Разрешаем запросы только с https://mapn:8890
+    methods: ['GET', 'POST'],    // Разрешаем только GET и POST методы
+    allowedHeaders: ['Content-Type'] // Разрешаем заголовок Content-Type
+}));
+
 app.use(express.json());
 
 // Обработка HTTP-запросов
 app.post('/send', (req, res) => {
+    console.log('Получен запрос:', req.body); // Логирование для отладки
     const { userId, text } = req.body;
     const userClients = clients.get(userId);
     if (userClients && userClients.length > 0) {
@@ -51,4 +60,6 @@ wss.on('connection', (ws) => {
     });
 });
 
-server.listen(3000, () => console.log('Сервер запущен на порту 3000'));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Сервер запущен на порту ${PORT}`));
+server.on('error', (err) => console.error('Ошибка сервера:', err)); // Логирование ошибок сервера
