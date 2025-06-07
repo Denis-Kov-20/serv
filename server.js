@@ -6,6 +6,9 @@ const wss = new WebSocket.Server({ server });
 
 const clients = new Map();  // Зберігає списки WebSocket-з'єднань за userId
 
+const port = process.env.PORT || 3000;
+server.listen(port, () => console.log(`Сервер запущено на порту ${port}`));
+
 app.use(express.json());
 
 // Обробка HTTP-запиту від сайту
