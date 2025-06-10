@@ -11,7 +11,7 @@ const clients = new Map();
 
 // Настройка CORS
 app.use(cors({
-  origin: ['http://localhost:8080', 'https://your-flutter-app.onrender.com', 'https://your-service.onrender.com'], // Укажите домены вашего Flutter-приложения
+  origin: ['http://localhost:8080', 'https://nikopol-map:8890', 'https://serv-17o2.onrender.com'],
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));
@@ -49,6 +49,7 @@ app.post('/command', (req, res) => {
   }
   res.status(200).send('Команда отправлена');
 });
+
 
 // Обработка WebSocket-соединений
 wss.on('connection', (ws, req) => {
