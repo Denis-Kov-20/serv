@@ -18,21 +18,18 @@ app.use(cors({
 
 app.use(express.json());
 
-// Эндпоинт для получения списка регионов (для Flutter-приложения)
+const axios = require('axios');
+
 app.get('/regions', async (req, res) => {
   try {
-    // Здесь должен быть запрос к базе данных Laravel через HTTP или прямое подключение
-    // Пример статических данных, замените на ваш запрос
-    const regions = [
-      { name: 'Регіон 1', command: 'action1' },
-      { name: 'Регіон 2', command: 'action2' }
-    ];
-    res.status(200).json(regions);
+    const response = await axios.get('https://abc123.ngrok.io/api/regions'); // Замените на ваш ngrok URL
+    res.status(200).json(response.data);
   } catch (error) {
-    console.error('Ошибка получения регионов:', error);
+    console.error('Ошибка получения регионов от Laravel:', error.message);
     res.status(500).send('Помилка сервера');
   }
 });
+
 
 // Эндпоинт для отправки команды
 app.post('/command', (req, res) => {
