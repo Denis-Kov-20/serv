@@ -1,65 +1,58 @@
 const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
 const cors = require('cors');
 
 const app = express();
-const server = require('http').createServer(app);
+const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const clients = new Map();
 
-// Настройка CORS для конкретного источника
+// Настройка CORS
 app.use(cors({
-    origin: 'https://mapn:8890', // Разрешаем запросы только с https://mapn:8890
-    methods: ['GET', 'POST'],    // Разрешаем только GET и POST методы
-    allowedHeaders: ['Content-Type'] // Разрешаем заголовок Content-Type
+  origin: ['http://localhost:8080', 'https://your-flutter-app.onrender.com', 'https://your-service.onrender.com'], // Укажите домены вашего Flutter-приложения
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
 }));
 
 app.use(express.json());
 
-// Обработка HTTP-запросов
-app.post('/send', (req, res) => {
-    console.log('Получен запрос:', req.body); // Логирование для отладки
-    const { userId, text } = req.body;
-    const userClients = clients.get(userId);
-    if (userClients && userClients.length > 0) {
-        userClients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(text);
-            }
-        });
-        res.status(200).send('Текст отправлен на все устройства пользователя');
-    } else {
-        res.status(404).send('Ни одно устройство не подключено для этого пользователя');
-    }
+// Эндпоинт для получения списка регионов (для Flutter-приложения)
+app.get('/regions', async (req, res) => {
+  try {
+    // Здесь должен быть запрос к базе данных Laravel через HTTP или прямое подключение
+    // Пример статических данных, замените на ваш запрос
+    const regions = [
+      { name: 'Регіон 1', command: 'action1' },
+      { name: 'Регіон 2', command: 'action2' }
+    ];
+    res.status(200).json(regions);
+  } catch (error) {
+    console.error('Ошибка получения регионов:', error);
+    res.status(500).send('Помилка сервера');
+  }
+});
+
+// Эндпоинт для отправки команды
+app.post('/command', (req, res) => {
+  console.log('Получен запрос:', req.body);
+  const { command } = req.body;
+  if (!command) {
+    return res.status(400).send('Команда не указана');
+  }
+
+  // Отправка команды всем подключенным клиентам
+  for (const [userId, userClients] of clients.entries()) {
+    userClients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ command }));
+      }
+    });
+  }
+  res.status(200).send('Команда отправлена');
 });
 
 // Обработка WebSocket-соединений
-wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        const { userId } = JSON.parse(message);
-        if (!clients.has(userId)) {
-            clients.set(userId, []);
-        }
-        clients.get(userId).push(ws);
-        console.log(`Устройство подключено для пользователя ${userId}`);
-    });
-
-    ws.on('close', () => {
-        for (let [userId, userClients] of clients.entries()) {
-            const index = userClients.indexOf(ws);
-            if (index !== -1) {
-                userClients.splice(index, 1);
-                if (userClients.length === 0) {
-                    clients.delete(userId);
-                }
-                console.log(`Устройство отключено для пользователя ${userId}`);
-                break;
-            }
-        }
-    });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Сервер запущен на порту ${PORT}`));
-server.on('error', (err) => console.error('Ошибка сервера:', err)); // Логирование ошибок сервера
+wss.on('connection', (ws, req) => {
+  console.log('Новое WebSocket-соединение');
